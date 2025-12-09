@@ -1,0 +1,23 @@
+# Frontend Environment Configuration
+# Copy this file to .env and fill in your values
+
+# ORCID OAuth Configuration
+# Get your credentials from: https://sandbox.orcid.org/developer-tools
+# NOTE: In production, client secret should only be in backend!
+VITE_ORCID_CLIENT_ID=
+VITE_ORCID_CLIENT_SECRET=
+VITE_ORCID_REDIRECT_URI=http://localhost:3001/callback
+
+# ORCID Endpoints (Sandbox for development)
+VITE_ORCID_AUTH_URL=https://sandbox.orcid.org/oauth/authorize
+VITE_ORCID_TOKEN_URL=https://sandbox.orcid.org/oauth/token
+VITE_ORCID_API_URL=https://pub.sandbox.orcid.org/v3.0
+
+# Production ORCID Endpoints (uncomment for production)
+# VITE_ORCID_AUTH_URL=https://orcid.org/oauth/authorize
+# VITE_ORCID_TOKEN_URL=https://orcid.org/oauth/token
+# VITE_ORCID_API_URL=https://pub.orcid.org/v3.0
+
+# Backend API URL
+VITE_API_URL=http://localhost:3333
+
