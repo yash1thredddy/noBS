@@ -25,9 +25,11 @@ export async function apiRequest<T>(
   // Add authorization header if required
   if (requiresAuth) {
     const token = getAccessToken();
-    if (token) {
-      requestHeaders['Authorization'] = `Bearer ${token}`;
+    if (!token) {
+      throw new Error('Authentication required but no access token found');
     }
+
+    requestHeaders['Authorization'] = `Bearer ${token}`;
   }
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -49,40 +51,11 @@ export async function apiRequest<T>(
  * Exchange ORCID authorization code for tokens
  */
 export async function exchangeOrcidCode(code: string) {
-  const clientId = import.meta.env.VITE_ORCID_CLIENT_ID;
-  const clientSecret = import.meta.env.VITE_ORCID_CLIENT_SECRET;
-  const redirectUri = import.meta.env.VITE_ORCID_REDIRECT_URI;
-  const tokenUrl = import.meta.env.VITE_ORCID_TOKEN_URL;
-
-  if (!clientId || !clientSecret || !redirectUri || !tokenUrl) {
-    throw new Error('Missing ORCID configuration');
-  }
-
-  const params = new URLSearchParams({
-    client_id: clientId,
-    client_secret: clientSecret,
-    grant_type: 'authorization_code',
-    code: code,
-    redirect_uri: redirectUri,
-  });
-
-  const response = await fetch(tokenUrl, {
+  // Delegate token exchange to backend to avoid exposing client secret
+  return apiRequest('/api/auth/login', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Accept: 'application/json',
-    },
-    body: params.toString(),
+    body: JSON.stringify({ code }),
   });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({
-      error_description: 'Token exchange failed',
-    }));
-    throw new Error(error.error_description || 'Failed to exchange code for token');
-  }
-
-  return response.json();
 }
 
 /**

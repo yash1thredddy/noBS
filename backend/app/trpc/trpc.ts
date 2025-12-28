@@ -32,13 +32,14 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
         user,
       },
     })
-  } catch {
+  } catch (error) {
+    // Log the real error for debugging
+    console.error('Authentication error:', error)
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'Invalid or expired token',
     })
-  }
-})
+  }})
 
 // Protected procedure - requires authentication
 export const protectedProcedure = t.procedure.use(isAuthed)
