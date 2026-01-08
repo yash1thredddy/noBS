@@ -13,13 +13,14 @@ import { middleware } from '#start/kernel'
 import User from '#models/user'
 import env from '#start/env'
 import { DateTime } from 'luxon'
+import {
+  type OrcidTokenResponse,
+  type OrcidProfileResponse,
+  extractProfileFromOrcidResponse,
+} from '#types/orcid'
 
-// Type for ORCID email response
-interface OrcidEmail {
-  email: string
-  primary: boolean
-  verified: boolean
-}
+// Lazy load controllers for better performance
+const EntriesController = () => import('#controllers/entries_controller')
 
 // Check if running in development mode
 const isDevelopment = env.get('NODE_ENV') === 'development'
@@ -34,69 +35,6 @@ router.get('/', async () => {
     auth: '/api/auth/login',
   }
 })
-
-// Refresh ORCID token endpoint
-router.post('/api/auth/refresh-orcid-token', async ({ auth, response }) => {
-  try {
-    console.log('🔄 Token refresh requested')
-    
-    await auth.authenticate()
-    const user = auth.user!
-    
-    if (!user.refreshToken) {
-      console.error('❌ No refresh token available')
-      return response.badRequest({ error: 'No refresh token available' })
-    }
-    
-    // Exchange refresh token for new access token
-    const ORCID_TOKEN_URL = env.get('ORCID_TOKEN_URL')
-    const ORCID_CLIENT_ID = env.get('ORCID_CLIENT_ID')
-    const ORCID_CLIENT_SECRET = env.get('ORCID_CLIENT_SECRET')
-    
-    const params = new URLSearchParams({
-      client_id: ORCID_CLIENT_ID,
-      client_secret: ORCID_CLIENT_SECRET,
-      grant_type: 'refresh_token',
-      refresh_token: user.refreshToken,
-    })
-
-    const tokenResponse = await fetch(ORCID_TOKEN_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Accept': 'application/json',
-      },
-      body: params.toString(),
-    })
-    
-    if (!tokenResponse.ok) {
-      const errorText = await tokenResponse.text()
-      console.error('❌ Token refresh failed:', errorText)
-      return response.badRequest({ error: 'Failed to refresh token' })
-    }
-    
-    const newTokens = await tokenResponse.json()
-    
-    // Update user with new tokens
-    user.accessToken = newTokens.access_token
-    user.refreshToken = newTokens.refresh_token || user.refreshToken
-    user.tokenExpiresAt = newTokens.expires_in 
-      ? DateTime.now().plus({ seconds: newTokens.expires_in })
-      : null
-    await user.save()
-    
-    console.log('✅ Token refreshed successfully')
-    
-    return response.ok({ 
-      success: true, 
-      message: 'Token refreshed successfully',
-      expiresAt: user.tokenExpiresAt?.toISO()
-    })
-  } catch (error) {
-    console.error('❌ Token refresh error:', error)
-    return response.internalServerError({ error: 'Failed to refresh token' })
-  }
-}).use(middleware.auth())
 
 // Check token validity endpoint
 router.get('/api/auth/check', async ({ auth, response }) => {
@@ -188,7 +126,7 @@ router.post('/api/auth/login', async ({ request, response }) => {
       return response.badRequest({ error: 'Failed to exchange code for tokens' })
     }
 
-    const tokenData = await tokenResponse.json()
+    const tokenData = await tokenResponse.json() as OrcidTokenResponse
     console.log('✅ Token exchange successful - ORCID:', tokenData.orcid)
 
     // Step 2: Fetch profile from ORCID
@@ -207,19 +145,10 @@ router.post('/api/auth/login', async ({ request, response }) => {
       return response.badRequest({ error: 'Failed to fetch ORCID profile' })
     }
 
-    const profileData = await profileResponse.json()
-    
-    // Extract profile info
-    const person = profileData.person
-    const givenName = person?.name?.['given-names']?.value || ''
-    const familyName = person?.name?.['family-name']?.value || ''
-    const name = `${givenName} ${familyName}`.trim() || 'Unknown User'
+    const profileData = await profileResponse.json() as OrcidProfileResponse
 
-    const emails: OrcidEmail[] = person?.emails?.email || []
-    const email = emails.find((e) => e.primary)?.email || emails[0]?.email || null
-
-    const employments = profileData['activities-summary']?.employments?.['affiliation-group'] || []
-    const institution = employments[0]?.summaries?.[0]?.['employment-summary']?.organization?.name || null
+    // Extract profile info using shared helper
+    const { name, email, institution } = extractProfileFromOrcidResponse(profileData)
 
     console.log('✅ Profile fetched - Name:', name, '| Email:', email || 'N/A')
 
@@ -277,6 +206,17 @@ router.post('/api/auth/login', async ({ request, response }) => {
     return response.internalServerError({ error: errorMessage })
   }
 })
+
+// Entry endpoints - using controller with VineJS validation
+router
+  .group(() => {
+    router.get('/', [EntriesController, 'index'])
+    router.post('/', [EntriesController, 'store'])
+    router.get('/:id', [EntriesController, 'show'])
+    router.delete('/:id', [EntriesController, 'destroy'])
+  })
+  .prefix('/api/entries')
+  .use(middleware.auth())
 
 // tRPC endpoints - available for future use
 // Currently the app uses REST endpoints, but tRPC is configured and ready

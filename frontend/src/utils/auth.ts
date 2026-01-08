@@ -1,12 +1,5 @@
 // Authentication utility functions
 
-export interface AuthTokens {
-  accessToken: string;
-  refreshToken?: string;
-  expiresIn: number;
-  tokenType: string;
-}
-
 export interface UserProfile {
   orcid: string;
   name: string;
@@ -15,31 +8,13 @@ export interface UserProfile {
 }
 
 const ACCESS_TOKEN_KEY = 'nobs_access_token';
-const REFRESH_TOKEN_KEY = 'nobs_refresh_token';
 const USER_PROFILE_KEY = 'nobs_user_profile';
-
-/**
- * Store authentication tokens in localStorage
- */
-export function storeTokens(tokens: AuthTokens): void {
-  localStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
-  if (tokens.refreshToken) {
-    localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
-  }
-}
 
 /**
  * Get access token from localStorage
  */
 export function getAccessToken(): string | null {
   return localStorage.getItem(ACCESS_TOKEN_KEY);
-}
-
-/**
- * Get refresh token from localStorage
- */
-export function getRefreshToken(): string | null {
-  return localStorage.getItem(REFRESH_TOKEN_KEY);
 }
 
 /**
@@ -70,7 +45,6 @@ export function getUserProfile(): UserProfile | null {
  */
 export function clearAuthData(): void {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
   localStorage.removeItem(USER_PROFILE_KEY);
 }
 

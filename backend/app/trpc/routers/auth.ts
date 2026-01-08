@@ -3,6 +3,11 @@ import { TRPCError } from '@trpc/server'
 import { router, publicProcedure, protectedProcedure } from '#trpc/trpc'
 import User from '#models/user'
 import env from '#start/env'
+import {
+  type OrcidTokenResponse,
+  type OrcidProfileResponse,
+  extractProfileFromOrcidResponse,
+} from '#types/orcid'
 
 // ORCID OAuth configuration
 const ORCID_TOKEN_URL = env.get('ORCID_TOKEN_URL', 'https://sandbox.orcid.org/oauth/token')
@@ -36,7 +41,7 @@ async function exchangeCodeForTokens(code: string) {
   })
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error_description: 'Token exchange failed' }))
+    const error = await response.json().catch(() => ({ error_description: 'Token exchange failed' })) as { error_description?: string }
     console.error('❌ Token exchange failed:', error)
     throw new TRPCError({
       code: 'BAD_REQUEST',
@@ -44,7 +49,7 @@ async function exchangeCodeForTokens(code: string) {
     })
   }
 
-  const data = await response.json()
+  const data = await response.json() as OrcidTokenResponse
   return data
 }
 
@@ -65,26 +70,10 @@ async function fetchOrcidProfile(orcid: string, accessToken: string) {
     })
   }
 
-  const data = await response.json()
+  const data = await response.json() as OrcidProfileResponse
+  const { name, email, institution } = extractProfileFromOrcidResponse(data)
 
-  // Extract profile data
-  const person = data.person
-  const givenName = person?.name?.['given-names']?.value || ''
-  const familyName = person?.name?.['family-name']?.value || ''
-  const name = `${givenName} ${familyName}`.trim() || 'Unknown User'
-
-  const emails = person?.emails?.email || []
-  const email = emails.find((e: any) => e.primary)?.email || emails[0]?.email || null
-
-  const employments = data['activities-summary']?.employments?.['affiliation-group'] || []
-  const institution = employments[0]?.summaries?.[0]?.['employment-summary']?.organization?.name || null
-
-  return {
-    orcid,
-    name,
-    email,
-    institution,
-  }
+  return { orcid, name, email, institution }
 }
 
 // Auth router
@@ -92,7 +81,7 @@ export const authRouter = router({
   // Login with ORCID authorization code
   login: publicProcedure
     .input(loginInput)
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async ({ input }) => {
       try {
         // Step 1: Exchange code for tokens
         const tokenResponse = await exchangeCodeForTokens(input.code)

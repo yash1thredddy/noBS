@@ -1,25 +1,16 @@
 // tRPC client configuration
-// 
-// NOTE: tRPC is configured but NOT currently used.
-// The app uses REST endpoints (/api/auth/login, /api/auth/logout) instead.
-// 
-// To use tRPC in the future:
-// 1. Import AppRouter type: import type { AppRouter } from '../../../backend/app/trpc/routers/index'
-// 2. Replace the placeholder type below
-// 3. Use trpc hooks in components: trpc.auth.login.useMutation()
-//
 import { createTRPCReact } from '@trpc/react-query';
 import { httpBatchLink } from '@trpc/client';
 import { getAccessToken } from './auth';
 
-// Placeholder type - replace with actual AppRouter from backend when switching to tRPC
-// import type { AppRouter } from '../../../backend/app/trpc/routers/index'
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AppRouter = any;
+// Import AppRouter type from backend for type-safe tRPC calls
+import type { AppRouter } from '../../../backend/app/trpc/routers/index';
 
-// Create tRPC React hooks - using any since tRPC is not currently active
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const trpc = createTRPCReact<AppRouter>() as any;
+// Re-export for use elsewhere
+export type { AppRouter };
+
+// Create tRPC React hooks with proper typing
+export const trpc = createTRPCReact<AppRouter>();
 
 /**
  * Get tRPC client configuration

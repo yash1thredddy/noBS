@@ -1,8 +1,7 @@
 // Submit section for the entry form
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useSignals } from '@preact/signals-react/runtime';
-import { Send, Save, Loader2, AlertCircle } from 'lucide-react';
+import { Send, Save, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { Button } from '../../../../components/ui/button';
 import { Card, CardContent } from '../../../../components/ui/card';
 import { Alert, AlertDescription } from '../../../../components/ui/alert';
@@ -22,6 +21,7 @@ import {
   molecule,
   nmrData,
   massSpecData,
+  initializeForm,
 } from '../../stores/entryFormStore';
 import { saveDraft, clearDraft } from '../../stores/draftStore';
 
@@ -43,16 +43,18 @@ function scrollToSection(sectionId: string) {
 
 export function SubmitSection() {
   useSignals(); // Enable signal reactivity
-  const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const handleSaveDraft = () => {
     saveDraft();
     setError(null);
+    setSuccess(null);
   };
 
   const handleSubmit = async () => {
     setError(null);
+    setSuccess(null);
     hasAttemptedSubmit.value = true;
 
     // Validate and scroll to first invalid field
@@ -117,14 +119,20 @@ export function SubmitSection() {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.message || 'Failed to submit entry');
+        throw new Error(data.error || data.message || 'Failed to submit entry');
       }
 
       // Clear draft on successful submission
       clearDraft();
 
-      // Navigate to dashboard with success message
-      navigate('/dashboard', { state: { message: 'Entry submitted successfully!' } });
+      // Show success message
+      setSuccess('Entry submitted successfully! The form has been reset for a new entry.');
+
+      // Reset form with new entry ID for next submission
+      initializeForm();
+
+      // Scroll to top of page
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
@@ -139,6 +147,13 @@ export function SubmitSection() {
           <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {success && (
+          <Alert className="mb-4 border-green-500 bg-green-50 text-green-800">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-800">{success}</AlertDescription>
           </Alert>
         )}
 

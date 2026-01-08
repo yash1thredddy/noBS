@@ -1,13 +1,11 @@
 // Auth store using Preact Signals
 import { signal, computed } from '@preact/signals-react';
-import { 
-  storeTokens, 
-  storeUserProfile, 
-  getUserProfile, 
+import {
+  storeUserProfile,
+  getUserProfile,
   clearAuthData,
   isAuthenticated as checkIsAuthenticated,
   getAccessToken,
-  type AuthTokens,
   type UserProfile
 } from '../utils/auth';
 
@@ -58,28 +56,6 @@ export function loginWithBackend(token: string, backendUser: BackendUser): void 
     
     // Clear force reauth flag
     localStorage.removeItem('nobs_force_reauth');
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Login failed';
-    throw err;
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-/**
- * Login with ORCID tokens and user profile (legacy/direct ORCID auth)
- */
-export async function login(tokens: AuthTokens, profile: UserProfile): Promise<void> {
-  try {
-    isLoading.value = true;
-    error.value = null;
-
-    // Store tokens and profile
-    storeTokens(tokens);
-    storeUserProfile(profile);
-
-    // Update user signal
-    user.value = profile;
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Login failed';
     throw err;
@@ -157,7 +133,6 @@ export const authStore = {
   isAuthenticated,
   
   // Actions
-  login,
   loginWithBackend,
   logout,
   initAuth,
