@@ -54,9 +54,9 @@
       target: 'esnext',
       outDir: 'build',
     },
-  server: {
-    port: 3001,
-    strictPort: true, // Fail if port is in use
-    open: true,
-  },
+    server: {
+      port: 3001,
+      strictPort: true,
+      open: true,
+    },
   });

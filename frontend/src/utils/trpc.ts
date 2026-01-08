@@ -14,10 +14,12 @@ import { getAccessToken } from './auth';
 
 // Placeholder type - replace with actual AppRouter from backend when switching to tRPC
 // import type { AppRouter } from '../../../backend/app/trpc/routers/index'
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AppRouter = any;
 
-// Create tRPC React hooks
-export const trpc = createTRPCReact<AppRouter>();
+// Create tRPC React hooks - using any since tRPC is not currently active
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const trpc = createTRPCReact<AppRouter>() as any;
 
 /**
  * Get tRPC client configuration

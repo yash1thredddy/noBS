@@ -1,8 +1,10 @@
 {
-      "name": "Single Button Login Page",
+      "name": "nobs-portal",
       "version": "0.1.0",
       "private": true,
       "dependencies": {
+            "@hookform/resolvers": "^5.2.2",
+            "@lexical/react": "^0.39.0",
             "@preact/signals-react": "^3.6.1",
             "@radix-ui/react-accordion": "^1.2.3",
             "@radix-ui/react-alert-dialog": "^1.1.6",
@@ -33,32 +35,55 @@
             "@tanstack/react-query": "^5.90.10",
             "@trpc/client": "^11.7.1",
             "@trpc/react-query": "^11.7.1",
+            "@trpc/server": "^11.8.1",
+            "@zakodium/nmrium-core-plugins": "^0.6.24",
             "class-variance-authority": "^0.7.1",
             "clsx": "*",
             "cmdk": "^1.1.1",
             "embla-carousel-react": "^8.6.0",
+            "file-collection": "^6.5.0",
             "input-otp": "^1.4.2",
+            "lexical": "^0.39.0",
             "lucide-react": "^0.487.0",
+            "mf-parser": "^3.6.0",
             "motion": "*",
             "next-themes": "^0.4.6",
+            "openchemlib": "^9.18.2",
             "react": "^18.3.1",
             "react-day-picker": "^8.10.1",
             "react-dom": "^18.3.1",
             "react-hook-form": "^7.55.0",
+            "react-mf": "^3.1.1",
+            "react-ocl": "^8.4.0",
             "react-resizable-panels": "^2.1.7",
             "react-router-dom": "*",
+            "react-science": "^19.4.0",
             "recharts": "^2.15.2",
             "sonner": "^2.0.3",
             "tailwind-merge": "*",
-            "vaul": "^1.1.2"
+            "uuid": "^13.0.0",
+            "vaul": "^1.1.2",
+            "zod": "^4.2.1"
       },
       "devDependencies": {
+            "@testing-library/dom": "^10.4.1",
+            "@testing-library/jest-dom": "^6.9.1",
+            "@testing-library/react": "^16.3.1",
+            "@testing-library/user-event": "^14.6.1",
             "@types/node": "^20.10.0",
+            "@types/react": "^18.3.27",
+            "@types/react-dom": "^18.3.7",
+            "@types/uuid": "^10.0.0",
             "@vitejs/plugin-react-swc": "^3.10.2",
-            "vite": "6.3.5"
+            "jsdom": "^27.4.0",
+            "vite": "^6.4.1",
+            "vitest": "^4.0.16"
       },
       "scripts": {
             "dev": "vite",
-            "build": "vite build"
+            "build": "vite build",
+            "test": "vitest",
+            "test:ui": "vitest --ui",
+            "test:coverage": "vitest --coverage"
       }
 }

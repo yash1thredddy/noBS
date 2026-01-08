@@ -187,3 +187,32 @@
 html {
   font-size: var(--font-size);
 }
+
+/* Custom utility classes for form validation errors - subtle styling */
+.ring-error {
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.6);
+}
+
+.bg-red-50 {
+  background-color: #fef2f2;
+}
+
+.bg-red-100 {
+  background-color: rgba(254, 226, 226, 0.6);
+}
+
+.text-red-400 {
+  color: #f87171;
+}
+
+.text-red-500 {
+  color: #ef4444;
+}
+
+.text-red-600 {
+  color: #dc2626;
+}
+
+.border-red-500 {
+  border-color: rgba(239, 68, 68, 0.5);
+}

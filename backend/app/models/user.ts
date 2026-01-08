@@ -51,7 +51,7 @@ export default class User extends BaseModel {
   declare createdAt: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
-  declare updatedAt: DateTime | null
+  declare updatedAt: DateTime
 
   // Access tokens for API authentication
   static accessTokens = DbAccessTokensProvider.forModel(User)
@@ -64,8 +64,8 @@ export default class User extends BaseModel {
       name: this.name,
       email: this.email,
       institution: this.institution,
-      createdAt: this.createdAt?.toISO(),
-      updatedAt: this.updatedAt?.toISO(),
+      createdAt: this.createdAt.toISO(),
+      updatedAt: this.updatedAt.toISO(),
     }
   }
 }

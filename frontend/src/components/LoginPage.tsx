@@ -241,7 +241,7 @@ export function LoginPage() {
   ];
 
   // Smaller background molecules
-  const smallMolecules = Array.from({ length: 25 }, (_, i) => ({
+  const smallMolecules = Array.from({ length: 25 }, () => ({
     size: 30 + Math.random() * 40,
     left: `${Math.random() * 100}%`,
     top: `${Math.random() * 100}%`,

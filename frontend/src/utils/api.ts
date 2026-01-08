@@ -17,9 +17,9 @@ export async function apiRequest<T>(
 ): Promise<T> {
   const { requiresAuth = false, headers = {}, ...fetchOptions } = options;
 
-  const requestHeaders: HeadersInit = {
+  const requestHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...headers,
+    ...(headers as Record<string, string>),
   };
 
   // Add authorization header if required
@@ -38,10 +38,29 @@ export async function apiRequest<T>(
   });
 
   if (!response.ok) {
+    // For server errors (5xx), use generic message to avoid leaking internal details
+    if (response.status >= 500) {
+      throw new Error('Server error. Please try again later.');
+    }
+
+    // For client errors (4xx), parse the error but sanitize
     const error = await response.json().catch(() => ({
       message: response.statusText,
     }));
-    throw new Error(error.message || 'API request failed');
+
+    // Only use known safe error messages, fallback to generic
+    const safeMessages = [
+      'Authentication required',
+      'Invalid credentials',
+      'Session expired',
+      'Not found',
+      'Validation failed',
+    ];
+
+    const message = error.message || 'Request failed';
+    const isSafeMessage = safeMessages.some(safe => message.toLowerCase().includes(safe.toLowerCase()));
+
+    throw new Error(isSafeMessage ? message : `Request failed (${response.status})`);
   }
 
   return response.json();
@@ -58,46 +77,4 @@ export async function exchangeOrcidCode(code: string) {
   });
 }
 
-/**
- * Fetch ORCID user profile
- */
-export async function fetchOrcidProfile(orcid: string, accessToken: string) {
-  const apiUrl = import.meta.env.VITE_ORCID_API_URL;
-
-  if (!apiUrl) {
-    throw new Error('Missing ORCID API URL configuration');
-  }
-
-  const response = await fetch(`${apiUrl}/${orcid}/record`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      Accept: 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch ORCID profile');
-  }
-
-  const data = await response.json();
-  
-  // Extract relevant information from ORCID response
-  const person = data.person;
-  const name = person?.name?.['given-names']?.value 
-    ? `${person.name['given-names'].value} ${person.name['family-name']?.value || ''}`
-    : 'Unknown User';
-
-  const emails = person?.emails?.email || [];
-  const email = emails.find((e: any) => e.primary)?.email || emails[0]?.email;
-
-  const employments = data['activities-summary']?.employments?.['affiliation-group'] || [];
-  const institution = employments[0]?.summaries?.[0]?.['employment-summary']?.organization?.name;
-
-  return {
-    orcid,
-    name: name.trim(),
-    email,
-    institution,
-  };
-}
 

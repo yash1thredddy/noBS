@@ -26,6 +26,6 @@ export default await Env.create(new URL('../', import.meta.url), {
   ORCID_CLIENT_ID: Env.schema.string(),
   ORCID_CLIENT_SECRET: Env.schema.string(),
   ORCID_REDIRECT_URI: Env.schema.string(),
-  ORCID_TOKEN_URL: Env.schema.string.optional(),
-  ORCID_API_URL: Env.schema.string.optional(),
+  ORCID_TOKEN_URL: Env.schema.string(),
+  ORCID_API_URL: Env.schema.string(),
 })

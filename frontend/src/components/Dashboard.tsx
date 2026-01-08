@@ -1,12 +1,14 @@
+import { useSignals } from '@preact/signals-react/runtime';
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { motion } from "motion/react";
-import { Search, Database, Microscope, FileText, User, LogOut } from "lucide-react";
+import { Search, Plus, Microscope, FileText, User, LogOut } from "lucide-react";
 import companyLogo from 'figma:asset/3719964460fd60c11f6876da44f351cf07902b42.png';
 import { user, logout } from '../stores/authStore';
 import { useNavigate } from 'react-router-dom';
 
 export function Dashboard() {
+  useSignals(); // Enable signal reactivity
   const navigate = useNavigate();
 
   // Access user signal - component auto re-renders when it changes
@@ -129,14 +131,17 @@ export function Dashboard() {
           >
             <h2 className="text-2xl mb-6 text-slate-900">Quick Actions</h2>
             <div className="grid md:grid-cols-4 gap-6">
-              <Card className="shadow-md border-green-100 hover:shadow-xl transition-shadow cursor-pointer group">
+              <Card
+                className="shadow-md border-green-100 hover:shadow-xl transition-shadow cursor-pointer group"
+                onClick={() => navigate('/entry/new')}
+              >
                 <CardContent className="p-6">
                   <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-green-200 transition-colors">
-                    <Database className="w-6 h-6 text-green-600" />
+                    <Plus className="w-6 h-6 text-green-600" />
                   </div>
-                  <h3 className="mb-2 text-slate-900">Browse Database</h3>
+                  <h3 className="mb-2 text-slate-900">New Entry</h3>
                   <p className="text-sm text-slate-600">
-                    Explore natural compounds
+                    Add a new compound
                   </p>
                 </CardContent>
               </Card>

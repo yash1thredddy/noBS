@@ -14,6 +14,16 @@ import User from '#models/user'
 import env from '#start/env'
 import { DateTime } from 'luxon'
 
+// Type for ORCID email response
+interface OrcidEmail {
+  email: string
+  primary: boolean
+  verified: boolean
+}
+
+// Check if running in development mode
+const isDevelopment = env.get('NODE_ENV') === 'development'
+
 // Health check
 router.get('/', async () => {
   return {
@@ -44,13 +54,13 @@ router.post('/api/auth/refresh-orcid-token', async ({ auth, response }) => {
     const ORCID_CLIENT_SECRET = env.get('ORCID_CLIENT_SECRET')
     
     const params = new URLSearchParams({
-      client_id: ORCID_CLIENT_ID!,
-      client_secret: ORCID_CLIENT_SECRET!,
+      client_id: ORCID_CLIENT_ID,
+      client_secret: ORCID_CLIENT_SECRET,
       grant_type: 'refresh_token',
       refresh_token: user.refreshToken,
     })
-    
-    const tokenResponse = await fetch(ORCID_TOKEN_URL!, {
+
+    const tokenResponse = await fetch(ORCID_TOKEN_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -136,9 +146,15 @@ router.post('/api/auth/login', async ({ request, response }) => {
     const { code } = request.body()
 
     console.log('🔐 ORCID Login initiated')
-    
-    if (!code) {
+
+    // Input validation
+    if (!code || typeof code !== 'string') {
       return response.badRequest({ error: 'Authorization code is required' })
+    }
+
+    // Validate code format (alphanumeric, reasonable length)
+    if (code.length < 6 || code.length > 100 || !/^[a-zA-Z0-9_-]+$/.test(code)) {
+      return response.badRequest({ error: 'Invalid authorization code format' })
     }
 
     // Step 1: Exchange code for tokens
@@ -148,16 +164,16 @@ router.post('/api/auth/login', async ({ request, response }) => {
     const ORCID_REDIRECT_URI = env.get('ORCID_REDIRECT_URI')
 
     console.log('📤 Exchanging authorization code for tokens...')
-    
+
     const params = new URLSearchParams({
-      client_id: ORCID_CLIENT_ID!,
-      client_secret: ORCID_CLIENT_SECRET!,
+      client_id: ORCID_CLIENT_ID,
+      client_secret: ORCID_CLIENT_SECRET,
       grant_type: 'authorization_code',
       code: code,
-      redirect_uri: ORCID_REDIRECT_URI!,
+      redirect_uri: ORCID_REDIRECT_URI,
     })
 
-    const tokenResponse = await fetch(ORCID_TOKEN_URL!, {
+    const tokenResponse = await fetch(ORCID_TOKEN_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -199,8 +215,8 @@ router.post('/api/auth/login', async ({ request, response }) => {
     const familyName = person?.name?.['family-name']?.value || ''
     const name = `${givenName} ${familyName}`.trim() || 'Unknown User'
 
-    const emails = person?.emails?.email || []
-    const email = emails.find((e: any) => e.primary)?.email || emails[0]?.email || null
+    const emails: OrcidEmail[] = person?.emails?.email || []
+    const email = emails.find((e) => e.primary)?.email || emails[0]?.email || null
 
     const employments = profileData['activities-summary']?.employments?.['affiliation-group'] || []
     const institution = employments[0]?.summaries?.[0]?.['employment-summary']?.organization?.name || null
@@ -252,7 +268,13 @@ router.post('/api/auth/login', async ({ request, response }) => {
 
   } catch (error) {
     console.error('❌ Login error:', error)
-    return response.internalServerError({ error: 'Authentication failed' })
+
+    // In development, include error details for debugging
+    const errorMessage = isDevelopment && error instanceof Error
+      ? `Authentication failed: ${error.message}`
+      : 'Authentication failed'
+
+    return response.internalServerError({ error: errorMessage })
   }
 })
 

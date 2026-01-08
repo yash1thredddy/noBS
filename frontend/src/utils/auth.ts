@@ -54,7 +54,15 @@ export function storeUserProfile(profile: UserProfile): void {
  */
 export function getUserProfile(): UserProfile | null {
   const profile = localStorage.getItem(USER_PROFILE_KEY);
-  return profile ? JSON.parse(profile) : null;
+  if (!profile) return null;
+
+  try {
+    return JSON.parse(profile);
+  } catch {
+    // Corrupted data in localStorage, clear it
+    localStorage.removeItem(USER_PROFILE_KEY);
+    return null;
+  }
 }
 
 /**
